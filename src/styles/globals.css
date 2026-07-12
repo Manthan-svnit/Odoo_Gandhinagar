@@ -261,14 +261,53 @@ tr:hover td { background: var(--bg-hover); }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 
 .error-box {
-  background: rgba(239,68,68,0.1);
-  border: 1px solid rgba(239,68,68,0.3);
-  border-radius: var(--radius);
-  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.1);
   color: var(--red);
-  font-size: 13px;
-  margin-bottom: 16px;
-  display: flex; align-items: center; gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* --- PRINT / EXPORT PDF STYLES --- */
+@media print {
+  :root {
+    --text-primary: #000000 !important;
+    --text-secondary: #111111 !important;
+    --text-muted: #333333 !important;
+    --border: #dddddd !important;
+  }
+  .sidebar, .topbar, .btn {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+  .page {
+    padding: 0 !important;
+  }
+  body, * {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .card, .kpi-card, .analytics-kpi {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+  table th {
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+  }
+  table td {
+    color: #111 !important;
+  }
 }
 
 .rule-note { font-size: 12px; color: var(--accent); margin-top: 12px; }

@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const expenses = await Expense.find()
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .populate('vehicleId', 'name registrationNumber')
       .populate('tripId', 'tripNumber');
     return res.status(200).json(expenses);
@@ -23,7 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!['fleet_manager', 'financial_analyst'].includes(role)) return res.status(403).json({ error: 'Forbidden' });
     const { vehicleId, tripId, category, amount, description, date } = req.body;
     if (!category || amount == null) return res.status(400).json({ error: 'Missing required fields' });
-    const expense = await Expense.create({ vehicleId, tripId, category, amount, description, date: date || new Date() });
+    const payload: any = { category, amount, description, date: date || new Date() };
+    if (vehicleId) payload.vehicleId = vehicleId;
+    if (tripId) payload.tripId = tripId;
+    const expense = await Expense.create(payload);
     return res.status(201).json(expense);
   }
 

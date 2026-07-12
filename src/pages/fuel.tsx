@@ -125,20 +125,29 @@ export default function FuelPage() {
   const router = useRouter();
   const [fuelLogs, setFuelLogs] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [maintenance, setMaintenance] = useState<any[]>([]);
   const [showFuel, setShowFuel] = useState(false);
   const [showExpense, setShowExpense] = useState(false);
+  const [expandedFuel, setExpandedFuel] = useState(false);
+  const [expandedExpense, setExpandedExpense] = useState(false);
 
   useEffect(() => { if (status === 'unauthenticated') router.push('/login'); }, [status]);
 
   async function load() {
-    const [f, e] = await Promise.all([fetch('/api/fuel').then(r => r.json()), fetch('/api/expenses').then(r => r.json())]);
-    setFuelLogs(f); setExpenses(e);
+    const [f, e, m] = await Promise.all([
+      fetch('/api/fuel').then(r => r.json()), 
+      fetch('/api/expenses').then(r => r.json()),
+      fetch('/api/maintenance').then(r => r.json())
+    ]);
+    setFuelLogs(f); setExpenses(e); setMaintenance(m);
   }
 
   useEffect(() => { if (status === 'authenticated') load(); }, [status]);
 
   const totalFuel = fuelLogs.reduce((s: number, f: any) => s + f.totalCost, 0);
   const totalExpense = expenses.reduce((s: number, e: any) => s + e.amount, 0);
+  const totalMaint = maintenance.reduce((s: number, m: any) => s + m.cost, 0);
+  const totalOpCost = totalFuel + totalExpense + totalMaint;
 
   return (
     <>
@@ -163,7 +172,7 @@ export default function FuelPage() {
                     <thead><tr><th>VEHICLE</th><th>DATE</th><th>LITERS</th><th>FUEL COST</th></tr></thead>
                     <tbody>
                       {fuelLogs.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>No fuel logs</td></tr>}
-                      {fuelLogs.map((f: any) => (
+                      {(expandedFuel ? fuelLogs : fuelLogs.slice(0, 5)).map((f: any) => (
                         <tr key={f._id}>
                           <td style={{ fontWeight: 600 }}>{f.vehicleId?.name || '—'}</td>
                           <td>{new Date(f.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
@@ -174,6 +183,11 @@ export default function FuelPage() {
                     </tbody>
                   </table>
                 </div>
+                {fuelLogs.length > 5 && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setExpandedFuel(!expandedFuel)} style={{ width: '100%', marginTop: 8, padding: '8px' }}>
+                    {expandedFuel ? 'See Less' : `See More (${fuelLogs.length - 5} more)`}
+                  </button>
+                )}
               </div>
 
               <div>
@@ -183,7 +197,7 @@ export default function FuelPage() {
                     <thead><tr><th>TRIP</th><th>VEHICLE</th><th>CATEGORY</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
                     <tbody>
                       {expenses.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>No expenses</td></tr>}
-                      {expenses.map((e: any) => (
+                      {(expandedExpense ? expenses : expenses.slice(0, 5)).map((e: any) => (
                         <tr key={e._id}>
                           <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{e.tripId?.tripNumber || '—'}</td>
                           <td>{e.vehicleId?.name || '—'}</td>
@@ -195,9 +209,14 @@ export default function FuelPage() {
                     </tbody>
                   </table>
                 </div>
+                {expenses.length > 5 && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setExpandedExpense(!expandedExpense)} style={{ width: '100%', marginTop: 8, padding: '8px' }}>
+                    {expandedExpense ? 'See Less' : `See More (${expenses.length - 5} more)`}
+                  </button>
+                )}
                 <div className="total-cost-bar">
-                  <span className="total-cost-label">TOTAL OPERATIONAL COST (AUTO) = FUEL + MAINT</span>
-                  <span className="total-cost-value">₹{(totalFuel + totalExpense).toLocaleString()}</span>
+                  <span className="total-cost-label">TOTAL OPERATIONAL COST = FUEL + MISC + MAINT</span>
+                  <span className="total-cost-value">₹{totalOpCost.toLocaleString()}</span>
                 </div>
               </div>
             </div>

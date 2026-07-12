@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const filter: Record<string, any> = {};
     if (vehicleId) filter.vehicleId = vehicleId;
     const logs = await FuelLog.find(filter)
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .populate('vehicleId', 'name registrationNumber')
       .populate('tripId', 'tripNumber');
     return res.status(200).json(logs);
@@ -29,7 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing required fields' });
     }
     const totalCost = liters * costPerLiter;
-    const log = await FuelLog.create({ vehicleId, tripId, liters, costPerLiter, totalCost, date: date || new Date(), odometer });
+    const payload: any = { vehicleId, liters, costPerLiter, totalCost, date: date || new Date(), odometer };
+    if (tripId) payload.tripId = tripId;
+    const log = await FuelLog.create(payload);
     return res.status(201).json(log);
   }
 
