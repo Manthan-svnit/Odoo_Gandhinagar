@@ -1,10 +1,12 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { LayoutDashboard, Truck, Users, Navigation, Wrench, Receipt, BarChart2, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Truck, Users, Navigation, Wrench, Receipt, BarChart2, Settings, LogOut, ShieldCheck, DollarSign } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/safety', label: 'Safety', icon: ShieldCheck },
+  { href: '/dashboard/finance', label: 'Finance', icon: DollarSign },
   { href: '/fleet', label: 'Fleet', icon: Truck },
   { href: '/drivers', label: 'Drivers', icon: Users },
   { href: '/trips', label: 'Trips', icon: Navigation },
@@ -34,12 +36,17 @@ export default function Sidebar() {
         <p>Smart Transport Platform</p>
       </div>
       <nav className="sidebar-nav">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className={`nav-item ${router.pathname.startsWith(href) ? 'active' : ''}`}>
-            <Icon size={15} />
-            {label}
-          </Link>
-        ))}
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = href === '/dashboard'
+            ? router.pathname === '/dashboard'
+            : router.pathname.startsWith(href);
+          return (
+            <Link key={href} href={href} className={`nav-item ${isActive ? 'active' : ''}`}>
+              <Icon size={15} />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
       <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
         <button className="nav-item" style={{ width: '100%', background: 'none', border: 'none' }} onClick={() => signOut({ callbackUrl: '/login' })}>
