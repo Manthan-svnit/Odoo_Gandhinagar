@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export type VehicleStatus = 'Available' | 'On Trip' | 'In Shop' | 'Retired';
 export type VehicleType = 'Truck' | 'Van' | 'Mini' | 'Car' | 'Bike' | 'Other';
 
-export interface IVehicle extends Document {
+export interface IVehicle extends Omit<Document, 'model'> {
   registrationNumber: string;
   name: string;
   model: string;

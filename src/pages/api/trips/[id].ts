@@ -62,7 +62,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       trip.status = 'Completed';
       trip.completedAt = new Date();
       vehicle.status = 'Available';
-      driver.status = 'Available';
+      if (driver.pendingSuspension) {
+        driver.status = 'Suspended';
+        driver.pendingSuspension = false;
+      } else {
+        driver.status = 'Available';
+      }
       driver.tripsCompleted = (driver.tripsCompleted || 0) + 1;
 
       if (fuelConsumed && fuelConsumed > 0) {

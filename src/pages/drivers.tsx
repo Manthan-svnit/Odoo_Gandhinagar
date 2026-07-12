@@ -6,7 +6,8 @@ import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import { Plus, X, AlertCircle } from 'lucide-react';
 
-function getBadgeClass(status: string) {
+function getBadgeClass(status: string, pendingSuspension?: boolean) {
+  if (pendingSuspension) return 'badge-suspended';
   const map: Record<string, string> = { 'Available': 'badge-available', 'On Trip': 'badge-on-trip', 'Off Duty': 'badge-off-duty', 'Suspended': 'badge-suspended' };
   return map[status] || 'badge-draft';
 }
@@ -121,6 +122,14 @@ export default function DriversPage() {
 
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<any>(null);
+  
+  const [scoreEditingDriver, setScoreEditingDriver] = useState<any>(null);
+  const [newSafetyScore, setNewSafetyScore] = useState<number>(100);
+
+  const [emailDriver, setEmailDriver] = useState<any>(null);
+  const [emailSubject, setEmailSubject] = useState<string>('TransitOps Safety Notice');
+  const [emailBody, setEmailBody] = useState<string>('');
+  const [emailSending, setEmailSending] = useState<boolean>(false);
 
   useEffect(() => { if (status === 'unauthenticated') router.push('/login'); }, [status]);
 
@@ -173,7 +182,7 @@ export default function DriversPage() {
                     {checking ? 'Checking Expiries...' : 'Check Expiries & Email'}
                   </button>
                 )}
-                {['fleet_manager', 'safety_officer'].includes(role) && (
+                {role === 'fleet_manager' && (
                   <button className="btn btn-primary" onClick={() => { setEditing(null); setShowModal(true); }}>
                     <Plus size={14} /> Add Driver
                   </button>
@@ -249,11 +258,39 @@ export default function DriversPage() {
                           <span style={{ fontSize: 12 }}>{d.safetyScore}%</span>
                         </div>
                       </td>
-                      <td><span className={`badge ${getBadgeClass(d.status)}`}>{d.status}</span></td>
+                      <td>
+                        <span className={`badge ${getBadgeClass(d.status, d.pendingSuspension)}`}>
+                          {d.pendingSuspension ? 'Suspension Pending' : d.status}
+                        </span>
+                      </td>
                       {['fleet_manager', 'safety_officer'].includes(role) && (
                         <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                             <button className="btn btn-ghost btn-sm" onClick={() => { setEditing(d); setShowModal(true); }}>Edit</button>
+                            {d.status === 'Suspended' || d.pendingSuspension ? (
+                              <button className="btn btn-sm btn-secondary" style={{ borderColor: 'var(--green)', color: 'var(--green)', padding: '4px 8px' }} onClick={() => quickStatus(d._id, 'Available')}>
+                                Unsuspend
+                              </button>
+                            ) : (
+                              <button className="btn btn-sm btn-secondary" style={{ borderColor: 'var(--red)', color: 'var(--red)', padding: '4px 8px' }} onClick={() => quickStatus(d._id, 'Suspended')}>
+                                Suspend
+                              </button>
+                            )}
+                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--accent)' }} onClick={() => {
+                              setScoreEditingDriver(d);
+                              setNewSafetyScore(d.safetyScore);
+                            }}>
+                              Score
+                            </button>
+                            {d.email && (
+                              <button className="btn btn-ghost btn-sm" style={{ color: 'var(--blue)' }} onClick={() => {
+                                setEmailDriver(d);
+                                setEmailSubject(`TransitOps - Notice for ${d.name}`);
+                                setEmailBody(`Dear ${d.name},\n\n`);
+                              }}>
+                                Email
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}
@@ -274,6 +311,118 @@ export default function DriversPage() {
 
             <p className="rule-note">Rule: Expired license or Suspended status → blocked from trip assignment</p>
             {showModal && <DriverModal onClose={() => setShowModal(false)} onSave={() => { setShowModal(false); load(); }} editing={editing} />}
+            
+            {scoreEditingDriver && (
+              <div className="modal-overlay" onClick={() => setScoreEditingDriver(null)}>
+                <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+                  <div className="modal-header">
+                    <div className="modal-title">Update Safety Score</div>
+                    <button className="modal-close" onClick={() => setScoreEditingDriver(null)}><X size={18} /></button>
+                  </div>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const res = await fetch(`/api/drivers/${scoreEditingDriver._id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        ...scoreEditingDriver,
+                        safetyScore: newSafetyScore
+                      })
+                    });
+                    if (res.ok) {
+                      setScoreEditingDriver(null);
+                      load();
+                    } else {
+                      const data = await res.json();
+                      alert(data.error || "Failed to update safety score");
+                    }
+                  }}>
+                    <div className="form-group" style={{ marginBottom: 20 }}>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
+                        SAFETY SCORE FOR {scoreEditingDriver.name.toUpperCase()} (0-100)
+                      </label>
+                      <input 
+                        className="form-input" 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        value={newSafetyScore} 
+                        onChange={e => setNewSafetyScore(Number(e.target.value))} 
+                        required 
+                        autoFocus
+                      />
+                    </div>
+                    <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setScoreEditingDriver(null)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary">Update Score</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {emailDriver && (
+              <div className="modal-overlay" onClick={() => setEmailDriver(null)}>
+                <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+                  <div className="modal-header">
+                    <div className="modal-title">Send Email to {emailDriver.name}</div>
+                    <button className="modal-close" onClick={() => setEmailDriver(null)}><X size={18} /></button>
+                  </div>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setEmailSending(true);
+                    try {
+                      const res = await fetch('/api/drivers/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          driverId: emailDriver._id,
+                          subject: emailSubject,
+                          message: emailBody,
+                        })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        alert("Email sent successfully!");
+                        setEmailDriver(null);
+                      } else {
+                        alert(data.error || "Failed to send email");
+                      }
+                    } catch (err: any) {
+                      alert("An error occurred while sending email");
+                    } finally {
+                      setEmailSending(false);
+                    }
+                  }}>
+                    <div className="form-group" style={{ marginBottom: 12 }}>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>SUBJECT</label>
+                      <input 
+                        className="form-input" 
+                        value={emailSubject} 
+                        onChange={e => setEmailSubject(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 20 }}>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>MESSAGE</label>
+                      <textarea 
+                        className="form-input" 
+                        style={{ height: 180, resize: 'vertical', fontFamily: 'sans-serif', padding: 8 }}
+                        value={emailBody} 
+                        onChange={e => setEmailBody(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                    <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setEmailDriver(null)} disabled={emailSending}>Cancel</button>
+                      <button type="submit" className="btn btn-primary" disabled={emailSending}>
+                        {emailSending ? 'Sending...' : 'Send Email'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
