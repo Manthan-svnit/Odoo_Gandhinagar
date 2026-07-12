@@ -139,9 +139,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | Role | Email | Password |
 |------|-------|----------|
 | **Super Admin** | `admin@transitops.in` | `admin123` |
-| **Dispatcher** | `dispatcher@transitops.in` | `dispatch123` |
-| **Safety Officer** | `safety@transitops.in` | `safety123` |
-| **Financial Analyst** | `finance@transitops.in` | `finance123` |
+| **Dispatcher** | `dispatcher@transitops.in` | `demo123` |
+| **Safety Officer** | `safety@transitops.in` | `demo123` |
+| **Financial Analyst** | `finance@transitops.in` | `demo123` |
 
 ---
 
