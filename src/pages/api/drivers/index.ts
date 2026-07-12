@@ -6,7 +6,7 @@ import Driver from '@/models/Driver';
 
 import { checkAndSendExpiryReminders } from '@/lib/mailer';
 
-const ALLOWED_CREATE = ['fleet_manager', 'safety_officer'];
+const ALLOWED_CREATE = ['fleet_manager'];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);

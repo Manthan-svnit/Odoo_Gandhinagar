@@ -117,7 +117,7 @@ export default function FinanceDashboard() {
                     <YAxis tick={{ fill: '#8b949e', fontSize: 11 }} axisLine={false} tickLine={false} width={60}
                       tickFormatter={(v: number) => v >= 1000 ? `₹${v / 1000}k` : `₹${v}`} />
                     <Tooltip
-                      formatter={(v: any, name: string) => [formatCurrency(Number(v)), name === 'revenue' ? 'Revenue' : 'Op. Cost']}
+                      formatter={(v: any, name: any) => [formatCurrency(Number(v)), name === 'revenue' ? 'Revenue' : 'Op. Cost']}
                       contentStyle={{ background: '#1c2128', border: '1px solid #30363d', borderRadius: 8, color: '#e6edf3', fontSize: 13 }}
                       cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                     />

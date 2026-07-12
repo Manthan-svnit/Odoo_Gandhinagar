@@ -4,8 +4,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { LayoutDashboard, Truck, Users, Navigation, Wrench, Receipt, BarChart2, Settings, LogOut, ShieldCheck, DollarSign } from 'lucide-react';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['fleet_manager', 'dispatcher'] },
-  { href: '/dashboard/safety', label: 'Safety', icon: ShieldCheck, roles: ['fleet_manager', 'safety_officer'] },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['fleet_manager', 'dispatcher', 'safety_officer'] },
+  { href: '/dashboard/safety', label: 'Safety', icon: ShieldCheck, roles: ['fleet_manager'] },
   { href: '/dashboard/finance', label: 'Finance', icon: DollarSign, roles: ['fleet_manager', 'financial_analyst'] },
   { href: '/fleet', label: 'Fleet', icon: Truck, roles: ['fleet_manager', 'dispatcher', 'financial_analyst'] },
   { href: '/drivers', label: 'Drivers', icon: Users, roles: ['fleet_manager', 'safety_officer'] },

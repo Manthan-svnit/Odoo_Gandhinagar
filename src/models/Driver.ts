@@ -12,6 +12,7 @@ export interface IDriver extends Document {
   safetyScore: number;
   tripsCompleted: number;
   status: DriverStatus;
+  pendingSuspension?: boolean;
   lastExpiryReminderSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -28,6 +29,7 @@ const DriverSchema = new Schema<IDriver>(
     safetyScore: { type: Number, required: true, min: 0, max: 100, default: 100 },
     tripsCompleted: { type: Number, default: 0 },
     status: { type: String, enum: ['Available', 'On Trip', 'Off Duty', 'Suspended'], default: 'Available' },
+    pendingSuspension: { type: Boolean, default: false },
     lastExpiryReminderSentAt: { type: Date },
   },
   { timestamps: true }
