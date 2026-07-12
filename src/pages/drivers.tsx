@@ -119,6 +119,9 @@ export default function DriversPage() {
   const [editing, setEditing] = useState<any>(null);
   const role = (session?.user as any)?.role;
 
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<any>(null);
+
   useEffect(() => { if (status === 'unauthenticated') router.push('/login'); }, [status]);
 
   async function load() {
@@ -136,6 +139,24 @@ export default function DriversPage() {
     load();
   }
 
+  async function triggerExpiryCheck() {
+    setChecking(true);
+    setCheckResult(null);
+    try {
+      const res = await fetch('/api/drivers/check-expiry', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to check expiries');
+      setCheckResult(data);
+      load();
+    } catch (err: any) {
+      alert(err.message || 'Error checking license expiries');
+    } finally {
+      setChecking(false);
+    }
+  }
+
   return (
     <>
       <Head><title>Drivers — TransitOps</title></Head>
@@ -146,12 +167,47 @@ export default function DriversPage() {
           <div className="page">
             <div className="page-header">
               <h2 className="page-title">Drivers &amp; Safety Profiles</h2>
-              {['fleet_manager', 'safety_officer'].includes(role) && (
-                <button className="btn btn-primary" onClick={() => { setEditing(null); setShowModal(true); }}>
-                  <Plus size={14} /> Add Driver
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: 12 }}>
+                {['fleet_manager', 'safety_officer'].includes(role) && (
+                  <button className="btn btn-secondary" onClick={triggerExpiryCheck} disabled={checking}>
+                    {checking ? 'Checking Expiries...' : 'Check Expiries & Email'}
+                  </button>
+                )}
+                {['fleet_manager', 'safety_officer'].includes(role) && (
+                  <button className="btn btn-primary" onClick={() => { setEditing(null); setShowModal(true); }}>
+                    <Plus size={14} /> Add Driver
+                  </button>
+                )}
+              </div>
             </div>
+
+            {checkResult && (
+              <div style={{ marginBottom: 20, borderLeft: '4px solid #f59e0b', background: '#161b22', padding: 16, borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontWeight: 600, color: '#f59e0b', fontSize: 15 }}>Expiry Check Completed:</div>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setCheckResult(null)}>Close</button>
+                </div>
+                <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--text-muted)' }}>
+                  <span>Processed: <strong>{checkResult.processed}</strong></span>
+                  <span>Emails Sent: <strong>{checkResult.emailsSent}</strong></span>
+                  <span>Drivers Suspended: <strong>{checkResult.suspended}</strong></span>
+                </div>
+                {checkResult.details && checkResult.details.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 12, borderTop: '1px solid #30363d', paddingTop: 8, maxHeight: 150, overflowY: 'auto' }}>
+                    {checkResult.details.map((d: any, i: number) => {
+                      let color = '#8b949e';
+                      if (d.action.includes('Warning email sent')) color = '#f59e0b';
+                      else if (d.action.includes('Suspended')) color = '#ef4444';
+                      return (
+                        <div key={i} style={{ color, padding: '2px 0' }}>
+                          • <strong>{d.name}</strong> ({d.email}) — Expires in {d.daysLeft} days: <em>{d.action}</em>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="filters-row">
               <input className="filter-input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
