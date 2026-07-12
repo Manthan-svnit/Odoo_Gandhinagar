@@ -11,14 +11,17 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        role: { label: 'Role', type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password || !credentials?.role) return null;
         await connectDB();
         const user = await User.findOne({ email: credentials.email.toLowerCase() });
         if (!user) return null;
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
+        // Strict role enforcement: selected role must match the user's actual role
+        if (user.role !== credentials.role) return null;
         return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
       },
     }),

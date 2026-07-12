@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
-import { Plus, X, AlertCircle } from 'lucide-react';
+import { Plus, X, AlertCircle, Copy, CheckCircle } from 'lucide-react';
 
 function getBadgeClass(status: string) {
   const map: Record<string, string> = { 'Available': 'badge-available', 'On Trip': 'badge-on-trip', 'Off Duty': 'badge-off-duty', 'Suspended': 'badge-suspended' };
@@ -27,7 +27,7 @@ function formatExpiry(date: string) {
   return `${mm}/${yy}`;
 }
 
-function DriverModal({ onClose, onSave, editing }: any) {
+function DriverModal({ onClose, onSave, editing, onCredentials }: any) {
   const [form, setForm] = useState(editing ? { ...editing, licenseExpiryDate: editing.licenseExpiryDate?.slice(0, 10) } : { name: '', licenseNumber: '', licenseCategory: 'LMV', licenseExpiryDate: '', contactNumber: '', email: '', safetyScore: 100, status: 'Available' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,10 @@ function DriverModal({ onClose, onSave, editing }: any) {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error || 'Error saving driver'); return; }
+    // If creating (not editing) and API returned generated credentials, surface them
+    if (!editing && data.generatedPassword && form.email) {
+      onCredentials?.({ email: form.email, password: data.generatedPassword });
+    }
     onSave();
   }
 
@@ -118,6 +122,8 @@ export default function DriversPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const role = (session?.user as any)?.role;
+  const [generatedCredentials, setGeneratedCredentials] = useState<{ email: string; password: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<any>(null);
@@ -273,7 +279,49 @@ export default function DriversPage() {
             </div>
 
             <p className="rule-note">Rule: Expired license or Suspended status → blocked from trip assignment</p>
-            {showModal && <DriverModal onClose={() => setShowModal(false)} onSave={() => { setShowModal(false); load(); }} editing={editing} />}
+            {showModal && <DriverModal onClose={() => setShowModal(false)} onSave={() => { setShowModal(false); load(); }} editing={editing} onCredentials={(creds: any) => { setGeneratedCredentials(creds); setCopied(false); }} />}
+
+            {generatedCredentials && (
+              <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setGeneratedCredentials(null)}>
+                <div className="modal" style={{ maxWidth: 440 }}>
+                  <div className="modal-header">
+                    <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle size={18} style={{ color: 'var(--green)' }} />
+                      Driver Account Created
+                    </div>
+                    <button className="modal-close" onClick={() => setGeneratedCredentials(null)}><X size={18} /></button>
+                  </div>
+                  <div style={{ padding: '16px 20px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
+                      A login account has been created for this driver. Please copy and share these credentials securely — the password will <strong style={{ color: 'var(--text)' }}>not</strong> be shown again.
+                    </p>
+                    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4, letterSpacing: '0.05em' }}>Email</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: 'var(--text)', wordBreak: 'break-all' }}>{generatedCredentials.email}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4, letterSpacing: '0.05em' }}>Password</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ fontFamily: 'monospace', fontSize: 14, color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.03em' }}>{generatedCredentials.password}</div>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            title="Copy password"
+                            onClick={() => { navigator.clipboard.writeText(generatedCredentials.password); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                            style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}
+                          >
+                            {copied ? <><CheckCircle size={13} style={{ color: 'var(--green)' }} /> Copied</> : <><Copy size={13} /> Copy</>}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn btn-primary" onClick={() => setGeneratedCredentials(null)}>Done</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -21,9 +21,12 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [filters, setFilters] = useState({ type: 'All', status: 'All', region: 'All' });
 
+  const role = (session?.user as any)?.role;
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
-  }, [status]);
+    if (status === 'authenticated' && (role === 'dispatcher' || role === 'driver')) router.replace('/trips');
+  }, [status, role]);
 
   useEffect(() => {
     if (status === 'authenticated') {
