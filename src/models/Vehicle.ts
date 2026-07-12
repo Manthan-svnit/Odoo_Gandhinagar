@@ -6,7 +6,7 @@ export type VehicleType = 'Truck' | 'Van' | 'Mini' | 'Car' | 'Bike' | 'Other';
 export interface IVehicle extends Document {
   registrationNumber: string;
   name: string;
-  vehicleModel: string;
+  model: string;
   type: VehicleType;
   maxLoadCapacity: number;
   odometer: number;
@@ -20,7 +20,7 @@ const VehicleSchema = new Schema<IVehicle>(
   {
     registrationNumber: { type: String, required: true, unique: true, uppercase: true, trim: true },
     name: { type: String, required: true, trim: true },
-    vehicleModel: { type: String, required: true, trim: true },
+    model: { type: String, required: true, trim: true },
     type: { type: String, enum: ['Truck', 'Van', 'Mini', 'Car', 'Bike', 'Other'], required: true },
     maxLoadCapacity: { type: Number, required: true, min: 0 },
     odometer: { type: Number, required: true, min: 0, default: 0 },

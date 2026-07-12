@@ -357,7 +357,7 @@ tr:hover td { background: var(--bg-hover); }
 .expiry-warn { color: var(--orange); font-size: 12px; }
 .expiry-expired { color: var(--red); font-size: 12px; }
 
-.split-layout { display: grid; grid-template-columns: 420px 1fr; gap: 20px; }
+.split-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
 
 .card {
   background: var(--bg-card);

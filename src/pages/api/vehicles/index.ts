@@ -26,13 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     if (!ALLOWED_CREATE.includes(role)) return res.status(403).json({ error: 'Forbidden' });
-    const { registrationNumber, name, vehicleModel, type, maxLoadCapacity, odometer, acquisitionCost } = req.body;
-    if (!registrationNumber || !name || !vehicleModel || !type || maxLoadCapacity == null || acquisitionCost == null) {
+    const { registrationNumber, name, model, type, maxLoadCapacity, odometer, acquisitionCost } = req.body;
+    if (!registrationNumber || !name || !model || !type || maxLoadCapacity == null || acquisitionCost == null) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     const existing = await Vehicle.findOne({ registrationNumber: registrationNumber.toUpperCase() });
     if (existing) return res.status(409).json({ error: 'Registration number already exists' });
-    const vehicle = await Vehicle.create({ registrationNumber, name, vehicleModel, type, maxLoadCapacity, odometer: odometer || 0, acquisitionCost });
+    const vehicle = await Vehicle.create({ registrationNumber, name, model, type, maxLoadCapacity, odometer: odometer || 0, acquisitionCost });
     return res.status(201).json(vehicle);
   }
 

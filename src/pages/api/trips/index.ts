@@ -9,7 +9,7 @@ import Driver from '@/models/Driver';
 let tripCounter = 1;
 
 async function getNextTripNumber() {
-  const latest = await Trip.findOne().sort({ createdAt: -1 });
+  const latest = await Trip.findOne().sort({ tripNumber: -1 });
   if (!latest) return 'TR001';
   const num = parseInt(latest.tripNumber?.replace('TR', '') || '0') + 1;
   return `TR${String(num).padStart(3, '0')}`;

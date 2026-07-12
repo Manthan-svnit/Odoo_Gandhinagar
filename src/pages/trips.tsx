@@ -233,9 +233,9 @@ export default function TripsPage() {
                           <td><span className={`badge ${getBadgeClass(t.status)}`}>{t.status}</span></td>
                           <td>
                             <div style={{ display: 'flex', gap: 4 }}>
-                              {t.status === 'Draft' && role !== 'safety_officer' && <button className="btn btn-sm btn-primary" onClick={() => action(t._id, 'dispatch')}>Dispatch</button>}
-                              {t.status === 'Dispatched' && role !== 'safety_officer' && <button className="btn btn-sm" style={{ background: 'var(--green)', color: '#fff' }} onClick={() => setCompleting(t)}>Complete</button>}
-                              {['Draft', 'Dispatched'].includes(t.status) && role !== 'safety_officer' && <button className="btn btn-sm btn-ghost" onClick={() => action(t._id, 'cancel')}>Cancel</button>}
+                              {t.status === 'Draft' && ['fleet_manager', 'dispatcher'].includes(role) && <button className="btn btn-sm btn-primary" onClick={() => action(t._id, 'dispatch')}>Dispatch</button>}
+                              {t.status === 'Dispatched' && ['fleet_manager', 'dispatcher'].includes(role) && <button className="btn btn-sm" style={{ background: 'var(--green)', color: '#fff' }} onClick={() => setCompleting(t)}>Complete</button>}
+                              {['Draft', 'Dispatched'].includes(t.status) && ['fleet_manager', 'dispatcher'].includes(role) && <button className="btn btn-sm btn-ghost" onClick={() => action(t._id, 'cancel')}>Cancel</button>}
                             </div>
                           </td>
                         </tr>
