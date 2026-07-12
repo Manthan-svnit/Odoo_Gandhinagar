@@ -203,13 +203,3 @@ TransitOps uses a **premium dark theme** built entirely with CSS custom properti
 - **Print**: Full `@media print` stylesheet that strips the sidebar, darkens all text, and renders crisp vector charts
 
 ---
-
-## 👥 Team
-
-Built with ❤️ by **Team Gandhinagar** for the **Odoo Hackathon 2026**.
-
----
-
-## 📄 License
-
-This project is built for hackathon purposes. All rights reserved by Team Gandhinagar.
