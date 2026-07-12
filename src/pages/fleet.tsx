@@ -137,7 +137,7 @@ export default function FleetPage() {
           <div className="page">
             <div className="page-header">
               <h2 className="page-title">Vehicle Registry</h2>
-              {['fleet_manager', 'dispatcher'].includes(role) && (
+              {['fleet_manager'].includes(role) && (
                 <button className="btn btn-primary" onClick={() => { setEditing(null); setShowModal(true); }}>
                   <Plus size={14} /> Add Vehicle
                 </button>

@@ -4,7 +4,7 @@ import { authOptions } from '../auth/[...nextauth]';
 import { connectDB } from '@/lib/db';
 import Vehicle from '@/models/Vehicle';
 
-const ALLOWED_CREATE = ['fleet_manager', 'dispatcher'];
+const ALLOWED_CREATE = ['fleet_manager'];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
