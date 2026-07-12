@@ -4,6 +4,8 @@ import { authOptions } from '../auth/[...nextauth]';
 import { connectDB } from '@/lib/db';
 import Driver from '@/models/Driver';
 
+import { checkAndSendExpiryReminders } from '@/lib/mailer';
+
 const ALLOWED_CREATE = ['fleet_manager', 'safety_officer'];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,6 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   if (req.method === 'GET') {
+    // Run the expiry warnings & auto-suspension checks asynchronously in the background
+    checkAndSendExpiryReminders().catch((err) => {
+      console.error('Error running background expiry reminders:', err);
+    });
+
     const { status, search } = req.query;
     const filter: Record<string, any> = {};
     if (status && status !== 'All') filter.status = status;
