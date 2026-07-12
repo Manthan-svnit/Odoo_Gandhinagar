@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 
 import { checkAndSendExpiryReminders } from '@/lib/mailer';
 
-const ALLOWED_CREATE = ['fleet_manager', 'safety_officer'];
+const ALLOWED_CREATE = ['fleet_manager'];
 
 function generatePassword(): string {
   const digits = Math.floor(100000 + Math.random() * 900000);

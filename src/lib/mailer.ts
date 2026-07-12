@@ -126,3 +126,20 @@ export async function checkAndSendExpiryReminders() {
 
   return { processed, emailsSent, suspended, details };
 }
+
+export async function sendCustomDriverEmail(driverName: string, email: string, subject: string, message: string) {
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to: email,
+    subject: subject,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;">
+        <h2 style="color:#f59e0b;">TransitOps — Message from Safety Officer</h2>
+        <p>Hello <strong>${driverName}</strong>,</p>
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 6px; border: 1px solid #30363d; line-height: 1.6; white-space: pre-wrap;">${message}</div>
+        <hr style="border-color:#30363d;margin:24px 0;"/>
+        <p style="font-size:12px;color:#8b949e;">This is an automated communication sent by TransitOps on behalf of your Safety Officer.</p>
+      </div>
+    `,
+  });
+}
