@@ -25,7 +25,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login');
-  }, [status]);
+    if (status === 'authenticated' && (role === 'dispatcher' || role === 'driver')) router.replace('/trips');
+  }, [status, role]);
 
   useEffect(() => {
     if (status === 'authenticated') {

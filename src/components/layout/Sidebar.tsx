@@ -9,7 +9,7 @@ const navItems = [
   { href: '/dashboard/finance', label: 'Finance', icon: DollarSign, roles: ['fleet_manager', 'financial_analyst'] },
   { href: '/fleet', label: 'Fleet', icon: Truck, roles: ['fleet_manager', 'dispatcher', 'financial_analyst'] },
   { href: '/drivers', label: 'Drivers', icon: Users, roles: ['fleet_manager', 'safety_officer'] },
-  { href: '/trips', label: 'Trips', icon: Navigation, roles: ['fleet_manager', 'dispatcher', 'safety_officer'] },
+  { href: '/trips', label: 'Trips', icon: Navigation, roles: ['fleet_manager', 'dispatcher', 'safety_officer', 'driver'] },
   { href: '/maintenance', label: 'Maintenance', icon: Wrench, roles: ['fleet_manager'] },
   { href: '/fuel', label: 'Fuel & Expenses', icon: Receipt, roles: ['fleet_manager', 'financial_analyst'] },
   { href: '/analytics', label: 'Analytics', icon: BarChart2, roles: ['fleet_manager', 'financial_analyst'] },
@@ -19,6 +19,7 @@ const navItems = [
 const roleLabels: Record<string, string> = {
   fleet_manager: 'Fleet Mgr',
   dispatcher: 'Dispatcher',
+  driver: 'Driver',
   safety_officer: 'Safety Officer',
   financial_analyst: 'Fin. Analyst',
 };

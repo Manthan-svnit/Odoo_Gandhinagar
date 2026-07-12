@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { AlertCircle, Truck, Navigation, Shield, BarChart2 } from 'lucide-react';
 import { GetServerSideProps } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './api/auth/[...nextauth]';
@@ -13,20 +14,47 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   return { props: {} };
 };
 
+const ROLE_OPTIONS = [
+  { value: 'fleet_manager', label: 'Fleet Manager', icon: Truck, color: '#f59e0b' },
+  { value: 'dispatcher', label: 'Dispatcher', icon: Navigation, color: '#3b82f6' },
+  { value: 'safety_officer', label: 'Safety Officer', icon: Shield, color: '#22c55e' },
+  { value: 'financial_analyst', label: 'Financial Analyst', icon: BarChart2, color: '#a855f7' },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [remember, setRemember] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(''); setLoading(true);
-    const result = await signIn('credentials', { email, password, redirect: false });
+    setError('');
+
+    if (!selectedRole) {
+      setError('Please select your role before signing in.');
+      return;
+    }
+
+    setLoading(true);
+    const result = await signIn('credentials', {
+      email,
+      password,
+      role: selectedRole,
+      redirect: false,
+    });
     setLoading(false);
-    if (result?.error) { setError('Invalid credentials. Please check your email and password.'); return; }
+
+    if (result?.error) {
+      setError(result.error === 'CredentialsSignin'
+        ? 'Invalid credentials or role mismatch. Make sure you selected the correct role for your account.'
+        : result.error
+      );
+      return;
+    }
     router.push('/dashboard');
   }
 
@@ -36,17 +64,17 @@ export default function LoginPage() {
       <div className="login-page">
         <div className="login-sidebar">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, textDecoration: 'none' }}>
               <div className="logo-icon">TO</div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>TransitOps</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Smart Transport Operations Platform</div>
               </div>
-            </div>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>One login, four roles:</p>
+            </Link>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>Select your role and sign in:</p>
             <div className="login-roles">
-              {['Fleet Manager', 'Dispatcher', 'Safety Officer', 'Financial Analyst'].map(r => (
-                <div key={r} className="login-role-item"><div className="login-role-dot" />{r}</div>
+              {ROLE_OPTIONS.map(r => (
+                <div key={r.value} className="login-role-item"><div className="login-role-dot" style={{ background: r.color }} />{r.label}</div>
               ))}
             </div>
           </div>
@@ -67,7 +95,7 @@ export default function LoginPage() {
         <div className="login-form-side">
           <div className="login-form-box">
             <h2 className="login-form-title">Sign in to your account</h2>
-            <p className="login-form-sub">Enter your credentials to continue</p>
+            <p className="login-form-sub">Select your role and enter credentials to continue</p>
 
             {error && (
               <div className="error-box">
@@ -77,9 +105,30 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit}>
+              {/* ── ROLE SELECTOR ── */}
+              <div className="form-group">
+                <label className="form-label">SELECT YOUR ROLE *</label>
+                <div className="role-selector-grid">
+                  {ROLE_OPTIONS.map(({ value, label, icon: Icon, color }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`role-selector-card ${selectedRole === value ? 'role-selector-active' : ''}`}
+                      style={{ '--role-color': color } as any}
+                      onClick={() => setSelectedRole(value)}
+                    >
+                      <div className="role-selector-icon" style={{ background: selectedRole === value ? color : 'var(--bg-hover)', color: selectedRole === value ? '#000' : 'var(--text-muted)' }}>
+                        <Icon size={16} />
+                      </div>
+                      <span className="role-selector-label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">EMAIL</label>
-                <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="raven@transitops.in" required />
+                <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@transitops.in" required />
               </div>
               <div className="form-group">
                 <label className="form-label">PASSWORD</label>
@@ -91,10 +140,10 @@ export default function LoginPage() {
                   <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
                   Remember me
                 </label>
-                <a href="#" className="forgot-link">Forgot password?</a>
+                <Link href="/forgot-password" className="forgot-link">Forgot password?</Link>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: 14, justifyContent: 'center', marginTop: 4 }} disabled={loading}>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: 14, justifyContent: 'center', marginTop: 4 }} disabled={loading || !selectedRole}>
                 {loading ? <span className="spinner" /> : 'Sign In'}
               </button>
             </form>
